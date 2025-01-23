@@ -1,0 +1,334 @@
+/*
+ */
+package red_star_autos_software.forms;
+
+import red_star_autos_software.classes.Log;
+import red_star_autos_software.classes.User;
+import red_star_autos_software.handlers.FormHandler;
+import red_star_autos_software.handlers.ViewHandler;
+import red_star_autos_software.utils.Commands;
+import red_star_autos_software.utils.DatabaseManager;
+import red_star_autos_software.utils.StyleSetting;
+import red_star_autos_software.views.TasksView;
+
+/**
+ *
+ * @author joe
+ */
+public class UpdateTask extends javax.swing.JFrame {
+
+    private final User USER;
+    private final ViewHandler VHANDLER;
+    private final javax.swing.JPanel PARENT;
+    private int selectedTask;
+    private int jobID;
+    private final java.util.HashMap<String, Integer> employees = new java.util.HashMap();
+    
+    /**
+     * Update Task Window.
+     * @param user The user that is logged in.
+     * @param viewHandler The view handler from the dashboard.
+     * @param panel The panel that the view is contained inside.
+     * @param taskID The task to update.
+     */
+    public UpdateTask(User user, ViewHandler viewHandler, javax.swing.JPanel panel, int taskID) {
+        this.USER = user;
+        this.VHANDLER = viewHandler;
+        this.PARENT = panel;
+        this.selectedTask = taskID;
+        
+        initComponents();
+        
+        // Custom Form Styling
+        this.setLocation(java.awt.Toolkit.getDefaultToolkit().getScreenSize().width / 2 - (this.getWidth() / 2), java.awt.Toolkit.getDefaultToolkit().getScreenSize().height / 2 - (this.getHeight() / 2));
+        java.util.List<javax.swing.JButton> buttons = new java.util.ArrayList<>();
+        buttons.add(btnUpdateTask);
+        StyleSetting.applyButtonStyles(buttons, btnUpdateTask.getBackground(), btnUpdateTask.getBorder());
+        
+        // Get the employees from the employees database.
+        java.sql.ResultSet employeesRes = DatabaseManager.Query("SELECT e.employee_id, e.employee_forename, e.employee_surname, r.role_name FROM employees e JOIN employee_roles er ON e.employee_id = er.employee_id JOIN roles r ON er.role_id = r.role_id WHERE er.role_id = 3 AND e.employee_id NOT IN (SELECT employee_id FROM tasks GROUP BY employee_id HAVING COUNT(*) > 5)");
+        try {
+            while(employeesRes.next()){
+                // Create a key for the employees HashMap and insert the employee id.
+                String employeeKey = employeesRes.getString("employee_forename") + " " + employeesRes.getString("employee_surname") + " (" + employeesRes.getString("role_name") + ")";
+                comboEmployees.addItem(employeeKey);
+                employees.put(employeeKey, employeesRes.getInt("employee_id"));
+            }
+        } catch (java.sql.SQLException e) {
+            // Display an error message and Log the error.
+            FormHandler.openMessageBox(new MessageBox("Error!", e.getMessage() + "\n\nContact System Administrator", javax.swing.JOptionPane.ERROR_MESSAGE));
+            new Log(Commands.getDateTime(), e.getMessage(), USER.getId()).send();
+        }
+        
+        // Get the tasks from the task database
+        java.sql.ResultSet taskRes = DatabaseManager.Query("SELECT t.job_id, t.task_description, t.task_status, t.task_cost, e.employee_forename, e.employee_surname, r.role_name FROM tasks t JOIN employees e ON e.employee_id = t.employee_id JOIN employee_roles er ON er.employee_id = e.employee_id JOIN roles r ON r.role_id = er.role_id WHERE task_id = ?", new Object[]{selectedTask});
+        try {
+            while(taskRes.next()){
+                // Set the forms input components to the database data.
+                String s = taskRes.getString("employee_forename") + " " + taskRes.getString("employee_surname") + " (" + taskRes.getString("role_name") + ")";
+                inputTaskDescription.setText(taskRes.getString("task_description"));
+                comboEmployees.setSelectedItem(s);
+                comboStatus.setSelectedItem(taskRes.getString("task_status"));
+                spinnerCost.setValue(taskRes.getFloat("task_cost"));
+                jobID = taskRes.getInt("job_id");
+            }
+        } catch (java.sql.SQLException e) {
+            // Display an error message and Log the error.
+            FormHandler.openMessageBox(new MessageBox("Error!", e.getMessage() + "\n\nContact System Administrator", javax.swing.JOptionPane.ERROR_MESSAGE));
+            new Log(Commands.getDateTime(), e.getMessage(), USER.getId()).send();
+        }
+        
+        DatabaseManager.Disconnect();
+        
+        // Role permissions.
+        switch(USER.getRoleID()){
+            case 3 -> {
+                inputTaskDescription.setEnabled(false);
+                comboEmployees.setEnabled(false);
+            }
+        }
+    }
+
+    /**
+     * This method is called from within the constructor to initialize the form.
+     * WARNING: Do NOT modify this code. The content of this method is always
+     * regenerated by the Form Editor.
+     */
+    @SuppressWarnings("unchecked")
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    private void initComponents() {
+
+        jPanel1 = new javax.swing.JPanel();
+        jLabel1 = new javax.swing.JLabel();
+        logo = new javax.swing.JLabel();
+        jPanel2 = new javax.swing.JPanel();
+        inputTaskDescription = new javax.swing.JTextPane();
+        comboStatus = new javax.swing.JComboBox<>();
+        btnUpdateTask = new javax.swing.JButton();
+        comboEmployees = new javax.swing.JComboBox<>();
+        jLabel2 = new javax.swing.JLabel();
+        jLabel3 = new javax.swing.JLabel();
+        jLabel4 = new javax.swing.JLabel();
+        spinnerCost = new javax.swing.JSpinner();
+
+        setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
+        setBackground(new java.awt.Color(204, 204, 204));
+        setResizable(false);
+        setType(java.awt.Window.Type.UTILITY);
+
+        jPanel1.setBackground(new java.awt.Color(204, 204, 204));
+        jPanel1.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(153, 153, 153)));
+        jPanel1.setForeground(new java.awt.Color(255, 102, 102));
+        jPanel1.setMaximumSize(new java.awt.Dimension(606, 48));
+        jPanel1.setMinimumSize(new java.awt.Dimension(606, 48));
+
+        jLabel1.setHorizontalAlignment(javax.swing.SwingConstants.LEFT);
+        jLabel1.setText("Red Star Auto Mechanics - Update Task");
+        jLabel1.setBackground(new java.awt.Color(255, 153, 153));
+        jLabel1.setCursor(new java.awt.Cursor(java.awt.Cursor.TEXT_CURSOR));
+        jLabel1.setFocusable(false);
+        jLabel1.setFont(jLabel1.getFont().deriveFont(jLabel1.getFont().getStyle() & ~java.awt.Font.BOLD, 26));
+        jLabel1.setForeground(new java.awt.Color(102, 102, 102));
+        jLabel1.setHorizontalTextPosition(javax.swing.SwingConstants.LEFT);
+        jLabel1.setInheritsPopupMenu(false);
+
+        logo.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
+        logo.setIcon(new javax.swing.ImageIcon(getClass().getResource("/red_star_autos_software/assets/logo.png"))); // NOI18N
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel1Layout.createSequentialGroup()
+                .addComponent(logo, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jLabel1)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                .addGap(0, 7, Short.MAX_VALUE)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(logo, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jLabel1, javax.swing.GroupLayout.PREFERRED_SIZE, 46, javax.swing.GroupLayout.PREFERRED_SIZE)))
+        );
+
+        jPanel2.setBackground(new java.awt.Color(204, 204, 204));
+
+        inputTaskDescription.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(153, 153, 153)));
+        inputTaskDescription.setText("Task Description");
+        inputTaskDescription.setBackground(new java.awt.Color(204, 204, 204));
+        inputTaskDescription.setForeground(new java.awt.Color(102, 102, 102));
+        inputTaskDescription.setPreferredSize(new java.awt.Dimension(200, 20));
+        inputTaskDescription.setToolTipText("Description of task.");
+        inputTaskDescription.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                inputTaskDescriptionFocusGained(evt);
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                inputTaskDescriptionFocusLost(evt);
+            }
+        });
+        inputTaskDescription.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyTyped(java.awt.event.KeyEvent evt) {
+                inputTaskDescriptioninputKeyTyped(evt);
+            }
+        });
+
+        comboStatus.setEditable(true);
+        comboStatus.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Ongoing", "Inspection", "Completed" }));
+        comboStatus.setBackground(new java.awt.Color(204, 204, 204));
+        comboStatus.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(102, 102, 102)));
+        comboStatus.setForeground(new java.awt.Color(102, 102, 102));
+
+        btnUpdateTask.setIcon(new javax.swing.ImageIcon(getClass().getResource("/red_star_autos_software/assets/icons/accept.png"))); // NOI18N
+        btnUpdateTask.setText("Update");
+        btnUpdateTask.setBackground(new java.awt.Color(204, 204, 204));
+        btnUpdateTask.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(153, 153, 153)));
+        btnUpdateTask.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnUpdateTask.setForeground(new java.awt.Color(102, 102, 102));
+        btnUpdateTask.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnUpdateTaskActionPerformed(evt);
+            }
+        });
+
+        comboEmployees.setEditable(true);
+        comboEmployees.setBackground(new java.awt.Color(204, 204, 204));
+        comboEmployees.setBorder(javax.swing.BorderFactory.createLineBorder(new java.awt.Color(102, 102, 102)));
+        comboEmployees.setForeground(new java.awt.Color(102, 102, 102));
+
+        jLabel2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/red_star_autos_software/assets/icons/money_add.png"))); // NOI18N
+        jLabel2.setText("Cost:");
+        jLabel2.setForeground(new java.awt.Color(102, 102, 102));
+
+        jLabel3.setIcon(new javax.swing.ImageIcon(getClass().getResource("/red_star_autos_software/assets/icons/user_orange.png"))); // NOI18N
+
+        jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/red_star_autos_software/assets/icons/page_edit.png"))); // NOI18N
+
+        spinnerCost.setModel(new javax.swing.SpinnerNumberModel(0.0f, null, null, 0.1f));
+        spinnerCost.setBorder(javax.swing.BorderFactory.createMatteBorder(1, 1, 1, 1, new java.awt.Color(102, 102, 102)));
+
+        javax.swing.GroupLayout jPanel2Layout = new javax.swing.GroupLayout(jPanel2);
+        jPanel2.setLayout(jPanel2Layout);
+        jPanel2Layout.setHorizontalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
+                        .addComponent(jLabel2)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(spinnerCost)
+                        .addGap(96, 96, 96)
+                        .addComponent(btnUpdateTask, javax.swing.GroupLayout.PREFERRED_SIZE, 96, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(jPanel2Layout.createSequentialGroup()
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addComponent(jLabel3)
+                            .addComponent(jLabel4))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                            .addGroup(jPanel2Layout.createSequentialGroup()
+                                .addComponent(comboEmployees, 0, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(comboStatus, javax.swing.GroupLayout.PREFERRED_SIZE, 186, javax.swing.GroupLayout.PREFERRED_SIZE))
+                            .addComponent(inputTaskDescription, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))))
+                .addContainerGap())
+        );
+        jPanel2Layout.setVerticalGroup(
+            jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(inputTaskDescription, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addComponent(jLabel4, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(comboStatus, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(comboEmployees, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(btnUpdateTask, javax.swing.GroupLayout.PREFERRED_SIZE, 28, javax.swing.GroupLayout.PREFERRED_SIZE)
+                    .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                        .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 24, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addComponent(spinnerCost, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
+                .addGap(2, 2, 2))
+        );
+
+        javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
+        getContentPane().setLayout(layout);
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, 558, Short.MAX_VALUE)
+        );
+        layout.setVerticalGroup(
+            layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(layout.createSequentialGroup()
+                .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(0, 0, 0)
+                .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
+        pack();
+    }// </editor-fold>//GEN-END:initComponents
+
+    private void inputTaskDescriptionFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputTaskDescriptionFocusGained
+        if(inputTaskDescription.getText().equals("Job Description"))
+            inputTaskDescription.setText("");
+        
+        inputTaskDescription.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 2, 0, new java.awt.Color(102, 102, 102)));
+    }//GEN-LAST:event_inputTaskDescriptionFocusGained
+
+    private void inputTaskDescriptionFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_inputTaskDescriptionFocusLost
+        if(inputTaskDescription.getText().isBlank() || inputTaskDescription.getText().isEmpty())
+            inputTaskDescription.setText("Job Description");
+        
+        inputTaskDescription.setBorder(javax.swing.BorderFactory.createMatteBorder(0, 0, 1, 0, new java.awt.Color(153, 153, 153)));
+    }//GEN-LAST:event_inputTaskDescriptionFocusLost
+
+    private void inputTaskDescriptioninputKeyTyped(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_inputTaskDescriptioninputKeyTyped
+        
+    }//GEN-LAST:event_inputTaskDescriptioninputKeyTyped
+
+    private void btnUpdateTaskActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUpdateTaskActionPerformed
+        // Values to update      
+        Object[] values = new Object[]{
+            inputTaskDescription.getText(),
+            (String) comboStatus.getSelectedItem(), 
+            (float) spinnerCost.getValue(),
+            employees.get((String) comboEmployees.getSelectedItem()),
+            java.sql.Timestamp.valueOf(java.time.LocalDateTime.now()),
+            this.selectedTask
+        };
+        
+        if(DatabaseManager.Update("UPDATE tasks SET task_description = ?, task_status = ?, task_cost = ?, employee_id = ?, last_update = ? WHERE task_id = ?", values)){
+            // If the update is successful, repopulate the TaskView table.
+            TasksView t = new TasksView(USER, VHANDLER);
+            VHANDLER.changeView(t, PARENT);
+            t.populate(this.jobID);
+            this.dispose();
+            new Log(Commands.getDateTime(), "Successfully updated a task", USER.getId()).send();
+        }else{
+            new Log(Commands.getDateTime(), "Failed to update a task", USER.getId()).send();
+        }
+    }//GEN-LAST:event_btnUpdateTaskActionPerformed
+
+    // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JButton btnUpdateTask;
+    private javax.swing.JComboBox<String> comboEmployees;
+    private javax.swing.JComboBox<String> comboStatus;
+    private javax.swing.JTextPane inputTaskDescription;
+    private javax.swing.JLabel jLabel1;
+    private javax.swing.JLabel jLabel2;
+    private javax.swing.JLabel jLabel3;
+    private javax.swing.JLabel jLabel4;
+    private javax.swing.JPanel jPanel1;
+    private javax.swing.JPanel jPanel2;
+    private javax.swing.JLabel logo;
+    private javax.swing.JSpinner spinnerCost;
+    // End of variables declaration//GEN-END:variables
+}
